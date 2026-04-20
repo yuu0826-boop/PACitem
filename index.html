@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAC 自我狀態量表</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif; background: #f5f4f0; color: #1a1a18; min-height: 100vh; }
+  .page { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+  header { margin-bottom: 2rem; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .subtitle { font-size: 14px; color: #5f5e5a; line-height: 1.65; }
+  .progress-wrap { margin: 1.25rem 0; display: flex; align-items: center; gap: 12px; }
+  .progress-bar { flex: 1; height: 5px; background: #d3d1c7; border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #1D9E75; border-radius: 3px; transition: width 0.3s; width: 0%; }
+  .progress-label { font-size: 12px; color: #888780; min-width: 48px; text-align: right; }
+  .q-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid #e8e6e0; }
+  .q-num { font-size: 12px; color: #888780; min-width: 26px; text-align: right; flex-shrink: 0; }
+  .q-text { flex: 1; font-size: 14px; line-height: 1.6; }
+  .q-options { display: flex; gap: 5px; flex-shrink: 0; }
+  .opt-label { cursor: pointer; }
+  .opt-label input { display: none; }
+  .opt-btn { display: flex; align-items: center; justify-content: center; width: 52px; height: 34px; border: 1px solid #c8c6bc; border-radius: 8px; font-size: 13px; color: #5f5e5a; background: #fff; transition: all 0.15s; user-select: none; }
+  .opt-label:hover .opt-btn { background: #f1efe8; }
+  .opt-label.yes  input:checked ~ .opt-btn { background: #1D9E75; border-color: #1D9E75; color: #fff; font-weight: 600; }
+  .opt-label.unsure input:checked ~ .opt-btn { background: #BA7517; border-color: #BA7517; color: #fff; font-weight: 600; }
+  .opt-label.no   input:checked ~ .opt-btn { background: #D85A30; border-color: #D85A30; color: #fff; font-weight: 600; }
+  .action-bar { margin-top: 2rem; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .btn-primary { padding: 11px 32px; background: #1D9E75; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+  .btn-primary:disabled { background: #b4b2a9; cursor: not-allowed; }
+  .btn-primary:not(:disabled):hover { opacity: 0.88; }
+  .btn-ghost { padding: 11px 22px; background: transparent; color: #5f5e5a; border: 1px solid #c8c6bc; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .btn-ghost:hover { background: #edecea; }
+  .miss-msg { font-size: 13px; color: #D85A30; }
+  #result-section { display: none; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid #d3d1c7; }
+  .result-title { font-size: 16px; font-weight: 600; margin-bottom: 1.25rem; }
+  .score-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .score-card { background: #fff; border: 1px solid #e0ded7; border-radius: 10px; padding: 14px 8px; text-align: center; }
+  .score-cat-label { font-size: 11px; color: #888780; margin-bottom: 4px; }
+  .score-num { font-size: 26px; font-weight: 700; }
+  .score-bar-bg { height: 4px; background: #e0ded7; border-radius: 2px; margin-top: 8px; }
+  .score-bar-fill { height: 4px; border-radius: 2px; }
+  .chart-container { position: relative; width: 100%; height: 300px; background: #fff; border: 1px solid #e0ded7; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: #5f5e5a; margin-top: 0.5rem; }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  @media (max-width: 500px) {
+    .q-row { flex-wrap: wrap; gap: 8px; }
+    .q-options { width: 100%; justify-content: flex-end; }
+    .opt-btn { width: 44px; height: 30px; font-size: 12px; }
+    .score-grid { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .score-num { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>PAC 自我狀態量表</h1>
+    <p class="subtitle">請依照自身的實際情形作答，每題選擇「是」、「不確定」或「否」，共 50 題。<br>沒有對錯之分，請誠實回答最能描述自己的選項。</p>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+    <span class="progress-label" id="prog-label">0 / 50</span>
+  </div>
+
+  <div id="qlist"></div>
+
+  <div class="action-bar">
+    <button class="btn-primary" id="submitBtn" disabled onclick="submitForm()">查看剖面圖</button>
+    <button class="btn-ghost" onclick="resetAll()">重新填寫</button>
+    <span class="miss-msg" id="missMsg"></span>
+  </div>
+
+  <div id="result-section">
+    <p class="result-title">各類別得分（每類滿分 20 分）</p>
+    <div class="score-grid" id="scoreGrid"></div>
+    <div class="chart-container">
+      <canvas id="pacChart" role="img" aria-label="PAC剖面圖"></canvas>
+    </div>
+    <div class="legend" id="legend"></div>
+    <p style="font-size:12px;color:#888780;margin-top:1rem;line-height:1.7;">
+      CP（控制型父母）：批判、規範、原則性強<br>
+      NP（養育型父母）：溫暖、照顧、同理心強<br>
+      A（成人）：理性、客觀、邏輯分析<br>
+      FC（自由型兒童）：活潑、直率、情感豐富<br>
+      AC（順應型兒童）：配合、謹慎、在意他人眼光
+    </p>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {n:1, t:"我總是很快的就能發現別人的缺點", c:"CP"},
+  {n:2, t:"朋友覺得我很能體貼別人", c:"NP"},
+  {n:3, t:"朋友說我很理性", c:"A"},
+  {n:4, t:"我喜歡隨心所欲、有點任性的過生活", c:"FC"},
+  {n:5, t:"我很害怕且會盡量避免衝突的場面", c:"AC"},
+  {n:6, t:"我對己對人都嚴格，而且喜歡教導別人", c:"CP"},
+  {n:7, t:"朋友說我很溫暖", c:"NP"},
+  {n:8, t:"我和別人說話時多半訴諸理性", c:"A"},
+  {n:9, t:"我對很多事情都很好奇", c:"FC"},
+  {n:10, t:"朋友說我很隨和、好說話", c:"AC"},
+  {n:11, t:"我經常發表對各種人事物的評論", c:"CP"},
+  {n:12, t:"我會稱讚別人的優點", c:"NP"},
+  {n:13, t:"我會仔細分析、慎重考慮後再做決定", c:"A"},
+  {n:14, t:"我是那種情緒藏不住、全都寫在臉上的人", c:"FC"},
+  {n:15, t:"我常覺得自己的意見不重要，大家開心就好", c:"AC"},
+  {n:16, t:"我會努力實現我的理想", c:"CP"},
+  {n:17, t:"對於別人的請託，我多半不會覺得厭煩", c:"NP"},
+  {n:18, t:"我會蒐集很多資料做為參考", c:"A"},
+  {n:19, t:"我不喜歡拐彎抹角的說話", c:"FC"},
+  {n:20, t:"我通常是和別人妥協，不會要求別人接受我的意見", c:"AC"},
+  {n:21, t:"我重視社會規範和倫理道德", c:"CP"},
+  {n:22, t:"我喜歡照顧別人，對小孩更是", c:"NP"},
+  {n:23, t:"我會以事實作為判斷各種人事物的依據", c:"A"},
+  {n:24, t:"我的情緒說來就來、說去就去，變化很快", c:"FC"},
+  {n:25, t:"我對別人的臉色和眼光很敏感", c:"AC"},
+  {n:26, t:"我會要求別人要有責任感，我討厭做事散漫的人", c:"CP"},
+  {n:27, t:"別人難過時，我會設法讓他好受一點", c:"NP"},
+  {n:28, t:"我認為保持客觀是一件重要的事", c:"A"},
+  {n:29, t:"我常說「好棒、哇、咦」等感嘆詞", c:"FC"},
+  {n:30, t:"我常回應別人「好吧、隨便」", c:"AC"},
+  {n:31, t:"朋友說和我在一起很緊張，因為會擔心講錯話或做錯事", c:"CP"},
+  {n:32, t:"我能夠包容別人的錯誤", c:"NP"},
+  {n:33, t:"我會衡量利害得失後才採取行動", c:"A"},
+  {n:34, t:"我常以直覺判斷事情，坦率的說一些話、做一些事", c:"FC"},
+  {n:35, t:"我會努力達到別人對我的期望", c:"AC"},
+  {n:36, t:"我會以嚴格的態度指責不當的言語和行為", c:"CP"},
+  {n:37, t:"我會專注傾聽別人說話，並且會點頭表示了解", c:"NP"},
+  {n:38, t:"我做事情都很有計畫", c:"A"},
+  {n:39, t:"我可以很自由的表達感情", c:"FC"},
+  {n:40, t:"我總覺得自己想說的話很難說出口", c:"AC"},
+  {n:41, t:"我認為在要求權力之前，應該要先盡到義務", c:"CP"},
+  {n:42, t:"我很重視人際關係和人情味", c:"NP"},
+  {n:43, t:"我能有效率的處理事情", c:"A"},
+  {n:44, t:"我說話和做事有點衝動，不會想太多", c:"FC"},
+  {n:45, t:"我常擔心自己做的不夠好", c:"AC"},
+  {n:46, t:"我經常說「應該」怎樣…、「最好」怎樣…之類的話", c:"CP"},
+  {n:47, t:"我樂意為人服務和參加公益活動", c:"NP"},
+  {n:48, t:"我不喜歡不明確的情況，和不確定的事情", c:"A"},
+  {n:49, t:"我喜歡冒險，做一些自己沒做過的事", c:"FC"},
+  {n:50, t:"我做事常會考慮別人的感覺", c:"AC"}
+];
+
+const cats = ["CP","NP","A","FC","AC"];
+const catColors = {CP:"#534AB7", NP:"#1D9E75", A:"#378ADD", FC:"#BA7517", AC:"#D85A30"};
+const answers = {};
+let chartInst = null;
+
+function buildQuestions() {
+  const el = document.getElementById("qlist");
+  questions.forEach(q => {
+    const row = document.createElement("div");
+    row.className = "q-row";
+    row.innerHTML = `
+      <span class="q-num">${q.n}</span>
+      <span class="q-text">${q.t}</span>
+      <div class="q-options">
+        <label class="opt-label yes"><input type="radio" name="q${q.n}" value="2"><span class="opt-btn">是</span></label>
+        <label class="opt-label unsure"><input type="radio" name="q${q.n}" value="1"><span class="opt-btn">不確定</span></label>
+        <label class="opt-label no"><input type="radio" name="q${q.n}" value="0"><span class="opt-btn">否</span></label>
+      </div>`;
+    row.querySelectorAll("input").forEach(inp => inp.addEventListener("change", () => {
+      answers[q.n] = parseInt(inp.value);
+      updateProgress();
+    }));
+    el.appendChild(row);
+  });
+}
+
+function updateProgress() {
+  const done = Object.keys(answers).length;
+  document.getElementById("prog").style.width = Math.round(done / 50 * 100) + "%";
+  document.getElementById("prog-label").textContent = done + " / 50";
+  document.getElementById("submitBtn").disabled = done < 50;
+  if (done >= 50) document.getElementById("missMsg").textContent = "";
+}
+
+function calcScores() {
+  const s = {CP:0, NP:0, A:0, FC:0, AC:0};
+  questions.forEach(q => { if (answers[q.n] !== undefined) s[q.c] += answers[q.n]; });
+  return s;
+}
+
+function submitForm() {
+  const missing = questions.filter(q => answers[q.n] === undefined);
+  if (missing.length > 0) { document.getElementById("missMsg").textContent = `尚有 ${missing.length} 題未作答`; return; }
+  const s = calcScores();
+
+  const grid = document.getElementById("scoreGrid");
+  grid.innerHTML = "";
+  cats.forEach(cat => {
+    const card = document.createElement("div");
+    card.className = "score-card";
+    card.innerHTML = `
+      <div class="score-cat-label">${cat}</div>
+      <div class="score-num" style="color:${catColors[cat]}">${s[cat]}</div>
+      <div class="score-bar-bg"><div class="score-bar-fill" style="width:${s[cat]/20*100}%;background:${catColors[cat]}"></div></div>`;
+    grid.appendChild(card);
+  });
+
+  const leg = document.getElementById("legend");
+  leg.innerHTML = "";
+  const catDesc = {CP:"控制型父母", NP:"養育型父母", A:"成人", FC:"自由型兒童", AC:"順應型兒童"};
+  cats.forEach(cat => {
+    const item = document.createElement("div");
+    item.className = "legend-item";
+    item.innerHTML = `<span class="legend-dot" style="background:${catColors[cat]}"></span>${cat}（${catDesc[cat]}）`;
+    leg.appendChild(item);
+  });
+
+  const rs = document.getElementById("result-section");
+  rs.style.display = "block";
+  rs.scrollIntoView({ behavior: "smooth", block: "start" });
+  drawChart(s);
+}
+
+function drawChart(s) {
+  if (chartInst) { chartInst.destroy(); }
+  const ctx = document.getElementById("pacChart").getContext("2d");
+  chartInst = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: cats,
+      datasets: [{
+        label: "得分",
+        data: cats.map(c => s[c]),
+        backgroundColor: cats.map(c => catColors[c] + "CC"),
+        borderColor: cats.map(c => catColors[c]),
+        borderWidth: 2,
+        borderRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `得分：${ctx.raw} / 20` } }
+      },
+      scales: {
+        y: {
+          min: 0, max: 20,
+          ticks: { stepSize: 4, font: { size: 12 } },
+          grid: { color: "rgba(0,0,0,0.07)" }
+        },
+        x: {
+          ticks: { font: { size: 15, weight: "600" } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function resetAll() {
+  Object.keys(answers).forEach(k => delete answers[k]);
+  document.querySelectorAll("input[type=radio]").forEach(r => r.checked = false);
+  document.getElementById("prog").style.width = "0%";
+  document.getElementById("prog-label").textContent = "0 / 50";
+  document.getElementById("submitBtn").disabled = true;
+  document.getElementById("missMsg").textContent = "";
+  document.getElementById("result-section").style.display = "none";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+buildQuestions();
+</script>
+</body>
+</html>

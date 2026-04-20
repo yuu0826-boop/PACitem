@@ -6,103 +6,309 @@
 <title>PAC 自我狀態量表</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif; background: #f5f4f0; color: #1a1a18; min-height: 100vh; }
-  .page { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
-  header { margin-bottom: 2rem; }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
-  .subtitle { font-size: 14px; color: #5f5e5a; line-height: 1.65; }
-  .progress-wrap { margin: 1.25rem 0; display: flex; align-items: center; gap: 12px; }
-  .progress-bar { flex: 1; height: 5px; background: #d3d1c7; border-radius: 3px; overflow: hidden; }
-  .progress-fill { height: 100%; background: #1D9E75; border-radius: 3px; transition: width 0.3s; width: 0%; }
-  .progress-label { font-size: 12px; color: #888780; min-width: 48px; text-align: right; }
-  .q-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid #e8e6e0; }
-  .q-num { font-size: 12px; color: #888780; min-width: 26px; text-align: right; flex-shrink: 0; }
-  .q-text { flex: 1; font-size: 14px; line-height: 1.6; }
-  .q-options { display: flex; gap: 5px; flex-shrink: 0; }
-  .opt-label { cursor: pointer; }
-  .opt-label input { display: none; }
-  .opt-btn { display: flex; align-items: center; justify-content: center; width: 52px; height: 34px; border: 1px solid #c8c6bc; border-radius: 8px; font-size: 13px; color: #5f5e5a; background: #fff; transition: all 0.15s; user-select: none; }
-  .opt-label:hover .opt-btn { background: #f1efe8; }
-  .opt-label.yes  input:checked ~ .opt-btn { background: #1D9E75; border-color: #1D9E75; color: #fff; font-weight: 600; }
-  .opt-label.unsure input:checked ~ .opt-btn { background: #BA7517; border-color: #BA7517; color: #fff; font-weight: 600; }
-  .opt-label.no   input:checked ~ .opt-btn { background: #D85A30; border-color: #D85A30; color: #fff; font-weight: 600; }
-  .action-bar { margin-top: 2rem; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  .btn-primary { padding: 11px 32px; background: #1D9E75; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
-  .btn-primary:disabled { background: #b4b2a9; cursor: not-allowed; }
-  .btn-primary:not(:disabled):hover { opacity: 0.88; }
-  .btn-ghost { padding: 11px 22px; background: transparent; color: #5f5e5a; border: 1px solid #c8c6bc; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: inherit; }
-  .btn-ghost:hover { background: #edecea; }
-  .miss-msg { font-size: 13px; color: #D85A30; }
-  #result-section { display: none; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid #d3d1c7; }
-  .result-title { font-size: 16px; font-weight: 600; margin-bottom: 1.25rem; }
-  .score-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 1.5rem; }
-  .score-card { background: #fff; border: 1px solid #e0ded7; border-radius: 10px; padding: 14px 8px; text-align: center; }
-  .score-cat-label { font-size: 11px; color: #888780; margin-bottom: 4px; }
-  .score-num { font-size: 26px; font-weight: 700; }
-  .score-bar-bg { height: 4px; background: #e0ded7; border-radius: 2px; margin-top: 8px; }
-  .score-bar-fill { height: 4px; border-radius: 2px; }
-  .chart-container { position: relative; width: 100%; height: 300px; background: #fff; border: 1px solid #e0ded7; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
-  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: #5f5e5a; margin-top: 0.5rem; }
-  .legend-item { display: flex; align-items: center; gap: 5px; }
-  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
-  @media (max-width: 500px) {
-    .q-row { flex-wrap: wrap; gap: 8px; }
-    .q-options { width: 100%; justify-content: flex-end; }
-    .opt-btn { width: 44px; height: 30px; font-size: 12px; }
-    .score-grid { grid-template-columns: repeat(5, 1fr); gap: 6px; }
-    .score-num { font-size: 20px; }
-  }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  background: #f5f4f0;
+  color: #1a1a18;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.screen { display: none; width: 100%; max-width: 560px; }
+.screen.active { display: block; }
+
+/* ── INTRO ── */
+.intro-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e0ded7;
+  padding: 2.5rem 2rem;
+  text-align: center;
+}
+.intro-badge {
+  display: inline-block;
+  background: #EEEDFE;
+  color: #3C3489;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 1.25rem;
+}
+.intro-card h1 { font-size: 22px; font-weight: 700; margin-bottom: 0.75rem; }
+.intro-card .lead { font-size: 14px; color: #5f5e5a; line-height: 1.75; margin-bottom: 1.5rem; }
+.intro-rules {
+  background: #f5f4f0;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+.intro-rules p { font-size: 13px; color: #444441; line-height: 1.9; margin: 0; }
+.option-demo { display: flex; gap: 8px; justify-content: center; margin-bottom: 2rem; }
+.demo-btn { padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; }
+.demo-yes    { background: #1D9E75; color: #fff; }
+.demo-unsure { background: #BA7517; color: #fff; }
+.demo-no     { background: #D85A30; color: #fff; }
+
+/* ── QUESTION ── */
+.q-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e0ded7;
+  padding: 2rem 2rem 2.5rem;
+}
+.q-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+}
+.q-counter { font-size: 13px; color: #888780; font-weight: 500; flex-shrink: 0; }
+.q-progress-wrap {
+  flex: 1;
+  margin: 0 1rem;
+  height: 4px;
+  background: #e0ded7;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.q-progress-fill {
+  height: 100%;
+  background: #534AB7;
+  border-radius: 2px;
+  transition: width 0.35s ease;
+}
+.q-back {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888780;
+  font-size: 13px;
+  padding: 4px 0;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  min-width: 52px;
+}
+.q-back:hover { color: #1a1a18; }
+
+.q-num-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #888780;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+.q-text {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.65;
+  margin-bottom: 2.25rem;
+  min-height: 58px;
+}
+
+.q-choices { display: flex; flex-direction: row; gap: 12px; }
+.choice-btn {
+  flex: 1;
+  padding: 18px 10px;
+  border-radius: 10px;
+  border: 1.5px solid #e0ded7;
+  background: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  font-family: inherit;
+  color: #1a1a18;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.choice-btn:hover { border-color: #b4b2a9; background: #f9f8f5; }
+.choice-btn:active { transform: scale(0.985); }
+.choice-btn.sel-yes    { border-color: #1D9E75; background: #E1F5EE; color: #085041; }
+.choice-btn.sel-unsure { border-color: #BA7517; background: #FAEEDA; color: #412402; }
+.choice-btn.sel-no     { border-color: #D85A30; background: #FAECE7; color: #4A1B0C; }
+
+.choice-dot {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid #d3d1c7;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sel-yes    .choice-dot { background: #1D9E75; border-color: #1D9E75; }
+.sel-unsure .choice-dot { background: #BA7517; border-color: #BA7517; }
+.sel-no     .choice-dot { background: #D85A30; border-color: #D85A30; }
+.dot-inner {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.sel-yes .dot-inner, .sel-unsure .dot-inner, .sel-no .dot-inner { opacity: 1; }
+
+/* ── RESULT ── */
+.result-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e0ded7;
+  padding: 2rem 2rem 2.5rem;
+}
+.result-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.result-sub { font-size: 13px; color: #5f5e5a; margin-bottom: 1.75rem; }
+
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 1.75rem;
+}
+.score-tile {
+  background: #f5f4f0;
+  border-radius: 10px;
+  padding: 12px 6px;
+  text-align: center;
+}
+.tile-cat  { font-size: 11px; color: #888780; margin-bottom: 4px; font-weight: 600; }
+.tile-num  { font-size: 24px; font-weight: 700; }
+.tile-bar-bg   { height: 3px; background: #e0ded7; border-radius: 2px; margin-top: 7px; }
+.tile-bar-fill { height: 3px; border-radius: 2px; }
+
+.chart-box { position: relative; height: 260px; margin-bottom: 1.25rem; }
+
+.result-legend {
+  display: flex; flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 12px; color: #5f5e5a;
+  margin-bottom: 1.75rem;
+}
+.leg-row { display: flex; align-items: center; gap: 5px; }
+.leg-sq  { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* ── SHARED BUTTONS ── */
+.btn-primary {
+  display: block; width: 100%;
+  padding: 14px;
+  background: #534AB7; color: #fff;
+  border: none; border-radius: 10px;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  text-align: center;
+  transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.88; }
+.btn-ghost {
+  display: block; width: 100%;
+  margin-top: 10px; padding: 13px;
+  background: transparent; color: #5f5e5a;
+  border: 1.5px solid #d3d1c7; border-radius: 10px;
+  font-size: 14px; font-weight: 500;
+  cursor: pointer; font-family: inherit;
+  text-align: center;
+  transition: background 0.15s;
+}
+.btn-ghost:hover { background: #f1efe8; }
+
+@media (max-width: 420px) {
+  body { padding: 1rem 0.75rem; align-items: flex-start; padding-top: 1.5rem; }
+  .intro-card, .q-card, .result-card { padding: 1.5rem 1.25rem 2rem; }
+  .q-text { font-size: 16px; }
+  .tile-num { font-size: 20px; }
+}
 </style>
 </head>
 <body>
-<div class="page">
-  <header>
-    <h1>PAC 自我狀態量表</h1>
-    <p class="subtitle">請依照自身的實際情形作答，每題選擇「是」、「不確定」或「否」，共 50 題。<br>沒有對錯之分，請誠實回答最能描述自己的選項。</p>
-  </header>
 
-  <div class="progress-wrap">
-    <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
-    <span class="progress-label" id="prog-label">0 / 50</span>
-  </div>
-
-  <div id="qlist"></div>
-
-  <div class="action-bar">
-    <button class="btn-primary" id="submitBtn" disabled onclick="submitForm()">查看剖面圖</button>
-    <button class="btn-ghost" onclick="resetAll()">重新填寫</button>
-    <span class="miss-msg" id="missMsg"></span>
-  </div>
-
-  <div id="result-section">
-    <p class="result-title">各類別得分（每類滿分 20 分）</p>
-    <div class="score-grid" id="scoreGrid"></div>
-    <div class="chart-container">
-      <canvas id="pacChart" role="img" aria-label="PAC剖面圖"></canvas>
+<!-- 介紹頁 -->
+<div class="screen active" id="screen-intro">
+  <div class="intro-card">
+    <div class="intro-badge">PAC 人格結構分析</div>
+    <h1>自我狀態量表</h1>
+    <p class="lead">本量表共 50 題，用來了解你在日常生活中常用的自我狀態，<br>幫助你更認識自己的溝通風格與人格特質。</p>
+    <div class="intro-rules">
+      <p>
+        每題請依照<strong>自己的實際情形</strong>作答，沒有對錯之分。<br>
+        每題有三個選項：<br><br>
+        &nbsp;・&nbsp;<strong>是</strong> ─ 很像你<br>
+        &nbsp;・&nbsp;<strong>不確定</strong><br>
+        &nbsp;・&nbsp;<strong>否</strong> ─ 不像你
+      </p>
     </div>
-    <div class="legend" id="legend"></div>
-    <p style="font-size:12px;color:#888780;margin-top:1rem;line-height:1.7;">
-      CP（控制型父母）：批判、規範、原則性強<br>
-      NP（養育型父母）：溫暖、照顧、同理心強<br>
-      A（成人）：理性、客觀、邏輯分析<br>
-      FC（自由型兒童）：活潑、直率、情感豐富<br>
-      AC（順應型兒童）：配合、謹慎、在意他人眼光
-    </p>
+    <div class="option-demo">
+      <span class="demo-btn demo-yes">是</span>
+      <span class="demo-btn demo-unsure">不確定</span>
+      <span class="demo-btn demo-no">否</span>
+    </div>
+    <button class="btn-primary" onclick="startQuiz()">開始作答</button>
+  </div>
+</div>
+
+<!-- 作答頁 -->
+<div class="screen" id="screen-question">
+  <div class="q-card">
+    <div class="q-header">
+      <button class="q-back" id="backBtn" onclick="prevQuestion()">&#8592; 上一題</button>
+      <div class="q-progress-wrap">
+        <div class="q-progress-fill" id="qProg"></div>
+      </div>
+      <span class="q-counter" id="qCounter">1 / 50</span>
+    </div>
+    <div class="q-num-label" id="qNumLabel">第 1 題</div>
+    <div class="q-text" id="qText"></div>
+    <div class="q-choices">
+      <button class="choice-btn" id="btn-yes" onclick="answer(2)">
+        <span class="choice-dot"><span class="dot-inner"></span></span>是
+      </button>
+      <button class="choice-btn" id="btn-unsure" onclick="answer(1)">
+        <span class="choice-dot"><span class="dot-inner"></span></span>不確定
+      </button>
+      <button class="choice-btn" id="btn-no" onclick="answer(0)">
+        <span class="choice-dot"><span class="dot-inner"></span></span>否
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 結果頁 -->
+<div class="screen" id="screen-result">
+  <div class="result-card">
+    <h2>你的 PAC 剖面圖</h2>
+    <p class="result-sub">以下是你五個自我狀態的得分（每類滿分 20 分）</p>
+    <div class="score-grid" id="scoreGrid"></div>
+    <div class="chart-box">
+      <canvas id="pacChart" role="img" aria-label="PAC剖面長條圖，顯示CP、NP、A、FC、AC五類得分"></canvas>
+    </div>
+    <div class="result-legend" id="resultLegend"></div>
+    <button class="btn-ghost" onclick="showIntro()">重新作答</button>
   </div>
 </div>
 
 <script>
 const questions = [
-  {n:1, t:"我總是很快的就能發現別人的缺點", c:"CP"},
-  {n:2, t:"朋友覺得我很能體貼別人", c:"NP"},
-  {n:3, t:"朋友說我很理性", c:"A"},
-  {n:4, t:"我喜歡隨心所欲、有點任性的過生活", c:"FC"},
-  {n:5, t:"我很害怕且會盡量避免衝突的場面", c:"AC"},
-  {n:6, t:"我對己對人都嚴格，而且喜歡教導別人", c:"CP"},
-  {n:7, t:"朋友說我很溫暖", c:"NP"},
-  {n:8, t:"我和別人說話時多半訴諸理性", c:"A"},
-  {n:9, t:"我對很多事情都很好奇", c:"FC"},
+  {n:1,  t:"我總是很快的就能發現別人的缺點", c:"CP"},
+  {n:2,  t:"朋友覺得我很能體貼別人", c:"NP"},
+  {n:3,  t:"朋友說我很理性", c:"A"},
+  {n:4,  t:"我喜歡隨心所欲、有點任性的過生活", c:"FC"},
+  {n:5,  t:"我很害怕且會盡量避免衝突的場面", c:"AC"},
+  {n:6,  t:"我對己對人都嚴格，而且喜歡教導別人", c:"CP"},
+  {n:7,  t:"朋友說我很溫暖", c:"NP"},
+  {n:8,  t:"我和別人說話時多半訴諸理性", c:"A"},
+  {n:9,  t:"我對很多事情都很好奇", c:"FC"},
   {n:10, t:"朋友說我很隨和、好說話", c:"AC"},
   {n:11, t:"我經常發表對各種人事物的評論", c:"CP"},
   {n:12, t:"我會稱讚別人的優點", c:"NP"},
@@ -148,127 +354,123 @@ const questions = [
 
 const cats = ["CP","NP","A","FC","AC"];
 const catColors = {CP:"#534AB7", NP:"#1D9E75", A:"#378ADD", FC:"#BA7517", AC:"#D85A30"};
-const answers = {};
+const catDesc   = {CP:"控制型父母", NP:"養育型父母", A:"成人", FC:"自由型兒童", AC:"順應型兒童"};
+
+let current = 0;
+let answers = new Array(50).fill(null);
 let chartInst = null;
 
-function buildQuestions() {
-  const el = document.getElementById("qlist");
-  questions.forEach(q => {
-    const row = document.createElement("div");
-    row.className = "q-row";
-    row.innerHTML = `
-      <span class="q-num">${q.n}</span>
-      <span class="q-text">${q.t}</span>
-      <div class="q-options">
-        <label class="opt-label yes"><input type="radio" name="q${q.n}" value="2"><span class="opt-btn">是</span></label>
-        <label class="opt-label unsure"><input type="radio" name="q${q.n}" value="1"><span class="opt-btn">不確定</span></label>
-        <label class="opt-label no"><input type="radio" name="q${q.n}" value="0"><span class="opt-btn">否</span></label>
-      </div>`;
-    row.querySelectorAll("input").forEach(inp => inp.addEventListener("change", () => {
-      answers[q.n] = parseInt(inp.value);
-      updateProgress();
-    }));
-    el.appendChild(row);
-  });
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
 
-function updateProgress() {
-  const done = Object.keys(answers).length;
-  document.getElementById("prog").style.width = Math.round(done / 50 * 100) + "%";
-  document.getElementById("prog-label").textContent = done + " / 50";
-  document.getElementById("submitBtn").disabled = done < 50;
-  if (done >= 50) document.getElementById("missMsg").textContent = "";
+function showIntro() {
+  current = 0;
+  answers = new Array(50).fill(null);
+  show("screen-intro");
+}
+
+function startQuiz() {
+  current = 0;
+  renderQuestion();
+  show("screen-question");
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  document.getElementById("qProg").style.width = Math.round(current / 50 * 100) + "%";
+  document.getElementById("qCounter").textContent = (current + 1) + " / 50";
+  document.getElementById("qNumLabel").textContent = "第 " + (current + 1) + " 題";
+  document.getElementById("qText").textContent = q.t;
+  document.getElementById("backBtn").style.visibility = current === 0 ? "hidden" : "visible";
+
+  const saved = answers[current];
+  document.getElementById("btn-yes").className    = "choice-btn" + (saved === 2 ? " sel-yes" : "");
+  document.getElementById("btn-unsure").className = "choice-btn" + (saved === 1 ? " sel-unsure" : "");
+  document.getElementById("btn-no").className     = "choice-btn" + (saved === 0 ? " sel-no" : "");
+}
+
+function answer(val) {
+  answers[current] = val;
+  document.getElementById("btn-yes").className    = "choice-btn" + (val === 2 ? " sel-yes" : "");
+  document.getElementById("btn-unsure").className = "choice-btn" + (val === 1 ? " sel-unsure" : "");
+  document.getElementById("btn-no").className     = "choice-btn" + (val === 0 ? " sel-no" : "");
+
+  setTimeout(() => {
+    if (current < 49) { current++; renderQuestion(); }
+    else { showResult(); }
+  }, 300);
+}
+
+function prevQuestion() {
+  if (current > 0) { current--; renderQuestion(); }
 }
 
 function calcScores() {
   const s = {CP:0, NP:0, A:0, FC:0, AC:0};
-  questions.forEach(q => { if (answers[q.n] !== undefined) s[q.c] += answers[q.n]; });
+  questions.forEach((q, i) => { if (answers[i] !== null) s[q.c] += answers[i]; });
   return s;
 }
 
-function submitForm() {
-  const missing = questions.filter(q => answers[q.n] === undefined);
-  if (missing.length > 0) { document.getElementById("missMsg").textContent = `尚有 ${missing.length} 題未作答`; return; }
+function showResult() {
   const s = calcScores();
 
   const grid = document.getElementById("scoreGrid");
   grid.innerHTML = "";
   cats.forEach(cat => {
-    const card = document.createElement("div");
-    card.className = "score-card";
-    card.innerHTML = `
-      <div class="score-cat-label">${cat}</div>
-      <div class="score-num" style="color:${catColors[cat]}">${s[cat]}</div>
-      <div class="score-bar-bg"><div class="score-bar-fill" style="width:${s[cat]/20*100}%;background:${catColors[cat]}"></div></div>`;
-    grid.appendChild(card);
+    const tile = document.createElement("div");
+    tile.className = "score-tile";
+    tile.innerHTML =
+      `<div class="tile-cat">${cat}</div>` +
+      `<div class="tile-num" style="color:${catColors[cat]}">${s[cat]}</div>` +
+      `<div class="tile-bar-bg"><div class="tile-bar-fill" style="width:${Math.round(s[cat]/20*100)}%;background:${catColors[cat]}"></div></div>`;
+    grid.appendChild(tile);
   });
 
-  const leg = document.getElementById("legend");
+  const leg = document.getElementById("resultLegend");
   leg.innerHTML = "";
-  const catDesc = {CP:"控制型父母", NP:"養育型父母", A:"成人", FC:"自由型兒童", AC:"順應型兒童"};
   cats.forEach(cat => {
-    const item = document.createElement("div");
-    item.className = "legend-item";
-    item.innerHTML = `<span class="legend-dot" style="background:${catColors[cat]}"></span>${cat}（${catDesc[cat]}）`;
-    leg.appendChild(item);
+    const row = document.createElement("div");
+    row.className = "leg-row";
+    row.innerHTML = `<span class="leg-sq" style="background:${catColors[cat]}"></span>${cat}（${catDesc[cat]}）`;
+    leg.appendChild(row);
   });
 
-  const rs = document.getElementById("result-section");
-  rs.style.display = "block";
-  rs.scrollIntoView({ behavior: "smooth", block: "start" });
-  drawChart(s);
-}
-
-function drawChart(s) {
   if (chartInst) { chartInst.destroy(); }
-  const ctx = document.getElementById("pacChart").getContext("2d");
-  chartInst = new Chart(ctx, {
-    type: "bar",
+  chartInst = new Chart(document.getElementById("pacChart").getContext("2d"), {
+    type: "line",
     data: {
       labels: cats,
       datasets: [{
-        label: "得分",
         data: cats.map(c => s[c]),
-        backgroundColor: cats.map(c => catColors[c] + "CC"),
-        borderColor: cats.map(c => catColors[c]),
-        borderWidth: 2,
-        borderRadius: 5
+        backgroundColor: "rgba(83,74,183,0.08)",
+        borderColor: "#534AB7",
+        borderWidth: 2.5,
+        pointBackgroundColor: cats.map(c => catColors[c]),
+        pointBorderColor: cats.map(c => catColors[c]),
+        pointRadius: 7,
+        pointHoverRadius: 9,
+        fill: true,
+        tension: 0.3
       }]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
         tooltip: { callbacks: { label: ctx => `得分：${ctx.raw} / 20` } }
       },
       scales: {
-        y: {
-          min: 0, max: 20,
-          ticks: { stepSize: 4, font: { size: 12 } },
-          grid: { color: "rgba(0,0,0,0.07)" }
-        },
-        x: {
-          ticks: { font: { size: 15, weight: "600" } },
-          grid: { display: false }
-        }
+        y: { min: 0, max: 20, ticks: { stepSize: 4, font: { size: 12 } }, grid: { color: "rgba(0,0,0,0.07)" } },
+        x: { ticks: { font: { size: 15, weight: "600" } }, grid: { display: false } }
       }
     }
   });
-}
 
-function resetAll() {
-  Object.keys(answers).forEach(k => delete answers[k]);
-  document.querySelectorAll("input[type=radio]").forEach(r => r.checked = false);
-  document.getElementById("prog").style.width = "0%";
-  document.getElementById("prog-label").textContent = "0 / 50";
-  document.getElementById("submitBtn").disabled = true;
-  document.getElementById("missMsg").textContent = "";
-  document.getElementById("result-section").style.display = "none";
+  show("screen-result");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
-
-buildQuestions();
 </script>
 </body>
 </html>
